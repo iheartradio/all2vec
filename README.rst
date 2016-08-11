@@ -15,4 +15,4 @@ file in a web browser.
 
 You can install through pip using::
 
-    $ python -m pip install -e git+ssh://git@github.com/iheartradio/all2vec#egg=all2vec
+    $ python -m pip install all2vec
