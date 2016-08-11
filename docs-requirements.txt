@@ -1,0 +1,4 @@
+doc8
+sphinx
+sphinxcontrib-napoleon
+sphinx_rtd_theme
