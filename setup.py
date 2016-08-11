@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='all2vec',
-    version='0.1.0',
+    version='0.2.0',
     author='Ravi Mody, Jon Banafato',
     author_email='datascience@iheartmedia.com',
     description='Store and compare high dimensional vectors',
