@@ -71,4 +71,4 @@ target/
 # pyenv
 .python-version
 
-
+*.swp
