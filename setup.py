@@ -11,6 +11,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'annoy',
+        'boto3',
         'dill',
         'numpy',
     ],

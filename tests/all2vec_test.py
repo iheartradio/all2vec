@@ -1,4 +1,4 @@
-from all2vec import EntitySet, FileGetter
+from all2vec import EntitySet, FileGetter, S3FileGetter
 
 def test_get_similar_vector():
     t = EntitySet(3)
@@ -76,6 +76,26 @@ def test_save_and_load(tmpdir):
     assert loaded.get_size() == 2
 
 def test_save_and_load_subset(tmpdir):
+    _create_entity_set(tmpdir)
+
+    loaded = EntitySet.load(FileGetter(str(tmpdir)), ['type0'])
+
+    sim = loaded.get_similar_vector([3, 2, 1], "type0", 3, 1, False)
+    assert [x['entity_id'] for x in sim] == [2, 1, 0]
+    assert loaded.get_size() == 1
+
+
+def test_load_from_s3(tmpdir):
+    s3_client = MockS3Client()
+    s3_getter = S3FileGetter('foo', 'bar', str(tmpdir), s3_client)
+    _create_entity_set(tmpdir)
+    _ = EntitySet.load(s3_getter)
+
+    # Expect 4 downloads: two type files, pickle, entity info
+    assert s3_client.downloads == 4
+
+
+def _create_entity_set(tmpdir):
     t = EntitySet(3)
     t.create_entity_type(entity_type_id=0, entity_type="type0", ntrees=10,
                          metric="angular")
@@ -90,8 +110,14 @@ def test_save_and_load_subset(tmpdir):
     a_dir = str(tmpdir)
     t.save(a_dir)
 
-    loaded = EntitySet.load(FileGetter(a_dir), ['type0'])
 
-    sim = loaded.get_similar_vector([3, 2, 1], "type0", 3, 1, False)
-    assert [x['entity_id'] for x in sim] == [2, 1, 0]
-    assert loaded.get_size() == 1
+class MockS3Client(object):
+
+    def __init__(self):
+        self.downloads = 0
+
+    def download_file(self,
+                      bucket,
+                      s3_path,
+                      local_path):
+        self.downloads += 1

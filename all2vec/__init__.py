@@ -5,6 +5,7 @@ import logging
 import os
 import json
 
+import boto3
 import numpy as np
 import dill
 from annoy import AnnoyIndex
@@ -360,3 +361,42 @@ class SparkFileGetter(FileGetter):
 
     def get_file_path(self, file_name):
         return self.sparkfiles.get(file_name)
+
+
+class S3FileGetter(FileGetter):
+
+    def __init__(self,
+                 s3_bucket,
+                 s3_prefix,
+                 my_dir,
+                 client=boto3.client('s3')):
+        """Pull model files from S3 before loading.
+
+        Assumes user has configured boto3.
+
+        :param str s3_bucket:
+        :param str s3_prefix: prefix of all model files in S3
+        :param str my_dir: directory for saving files from S3
+        :param client:
+        """
+        self.bucket = s3_bucket
+        self.prefix = s3_prefix
+        self._client = client
+        self.model_dir = my_dir
+
+        super(S3FileGetter, self).__init__(folder=self.model_dir)
+
+    def get_binary_file(self, file_name):
+        file_path = self.get_file_path(file_name)
+        return open(file_path, 'rb')
+
+    def get_file(self, file_name):
+        file_path = self.get_file_path(file_name)
+        return open(file_path)
+
+    def get_file_path(self, file_name):
+        file_path = os.path.join(self.folder, file_name)
+        self._client.download_file(self.bucket,
+                                   os.path.join(self.prefix, file_name),
+                                   file_path)
+        return file_path
