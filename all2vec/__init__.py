@@ -377,7 +377,7 @@ class S3FileGetter(FileGetter):
         :param str s3_bucket:
         :param str s3_prefix: prefix of all model files in S3
         :param str my_dir: directory for saving files from S3
-        :param client:
+        :param client: must have or be able to access AWS credentials
         """
         self.bucket = s3_bucket
         self.prefix = s3_prefix
