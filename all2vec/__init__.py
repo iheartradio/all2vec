@@ -216,6 +216,19 @@ class EntitySet(object):
         return self.get_scores_vector(
             vector, match_type, match_id_array, normalize)
 
+    def get_similar_threshold(self, entity_type, entity_id, match_type,
+                              threshold, n_try=10):
+        """Get similar items within a score threshold to a query item."""
+        scores = self.get_similar(
+            entity_type, entity_id, match_type, n_try)
+        if not scores:
+            return scores
+        if np.any([item["score"] < threshold for item in scores]):
+            return [item for item in scores if item["score"] > threshold]
+        else:
+            return self.get_similiar_threshold(
+                entity_type, entity_id, match_type, threshold, n_try*10)
+
     def save(self, folder):
         """Save object."""
         if not os.path.exists(folder):
