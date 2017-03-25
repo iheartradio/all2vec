@@ -226,7 +226,7 @@ class EntitySet(object):
         if np.any([item["score"] < threshold for item in scores]):
             return [item for item in scores if item["score"] > threshold]
         else:
-            return self.get_similiar_threshold(
+            return self.get_similar_threshold(
                 entity_type, entity_id, match_type, threshold, n_try*10)
 
     def save(self, folder):
