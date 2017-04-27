@@ -5,7 +5,7 @@ Changelog
 Version 0.2.0
 =============
 
-Release TBD
+- alternate loading methods with SparkFileGetter and S3FileGetter
 
 
 Version 0.1.0
