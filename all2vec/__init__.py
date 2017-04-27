@@ -229,6 +229,16 @@ class EntitySet(object):
             return self.get_similar_threshold(
                 entity_type, entity_id, match_type, threshold, n_try*10)
 
+    def get_entity_types(self):
+        """Helper for getting entity types object."""
+        return [{
+            'num_entities': etype._ann_obj.get_n_items(),
+            'entity_type_id': etype._entity_type_id,
+            'entity_type': etype._entity_type,
+            'metric':  etype._metric,
+            'num_trees': etype._ntrees
+        } for etype in self._annoy_objects.values()]
+
     def save(self, folder):
         """Save object."""
         if not os.path.exists(folder):
@@ -242,17 +252,24 @@ class EntitySet(object):
             dill.dump(self, handle)
 
         # write entity types
-        enttypes = [{
-            'num_entities': etype._ann_obj.get_n_items(),
-            'entity_type_id': etype._entity_type_id,
-            'entity_type': etype._entity_type,
-            'metric':  etype._metric,
-            'num_trees': etype._ntrees
-        } for k, etype in self._annoy_objects.items()]
+        enttypes = self.get_entity_types()
 
         info_file = os.path.join(folder, 'entity_info.json')
         with open(info_file, 'w') as handle:
             json.dump(enttypes, handle)
+
+    def load_entities(self, entities, file_getter):
+        """Load underlying entities."""
+        for k in entities:
+            annoy_filepath = file_getter.get_file_path('{}.ann'.format(k))
+            try:
+                self._annoy_objects[k].load(self,
+                                            annoy_filepath)
+            except IOError as e:
+                raise IOError(
+                    "Error: cannot load file {0}, which was built "
+                    "with the model. '{1}'".format(annoy_filepath, e)
+                )
 
     @classmethod
     def load_pickle(cls, file_getter):
@@ -329,16 +346,8 @@ class EntitySet(object):
             }
 
         # annoy objects can't be pickled, so load these after pickle is loaded
-        for k in entities:
-            annoy_filepath = file_getter.get_file_path('{}.ann'.format(k))
-            try:
-                unpickled_class._annoy_objects[k].load(unpickled_class,
-                                                       annoy_filepath)
-            except IOError as e:
-                raise IOError(
-                    "Error: cannot load file {0}, which was built "
-                    "with the model. '{1}'".format(annoy_filepath, e)
-                )
+        unpickled_class.load_entities(entities, file_getter)
+
         cls.check_load(enttype_info, unpickled_class)
         return unpickled_class
 
@@ -398,14 +407,6 @@ class S3FileGetter(FileGetter):
         self.model_dir = my_dir
 
         super(S3FileGetter, self).__init__(folder=self.model_dir)
-
-    def get_binary_file(self, file_name):
-        file_path = self.get_file_path(file_name)
-        return open(file_path, 'rb')
-
-    def get_file(self, file_name):
-        file_path = self.get_file_path(file_name)
-        return open(file_path)
 
     def get_file_path(self, file_name):
         file_path = os.path.join(self.folder, file_name)
