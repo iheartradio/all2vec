@@ -240,16 +240,19 @@ class EntitySet(object):
         } for etype in self._annoy_objects.values()]
 
     def save(self, folder):
-        """Save object."""
+        """Save object and return corresponding files."""
         if not os.path.exists(folder):
             os.makedirs(folder)
+        files = []
         # annoy objects can't be pickled, so save these separately
         for k, v in self._annoy_objects.items():
             annoy_filepath = os.path.join(folder, '{}.ann'.format(k))
             v._ann_obj.save(annoy_filepath)
+            files.append(annoy_filepath)
         pickle_filepath = os.path.join(folder, 'object.pickle')
         with open(pickle_filepath, 'wb') as handle:
             dill.dump(self, handle)
+        files.append(pickle_filepath)
 
         # write entity types
         enttypes = self.get_entity_types()
@@ -257,6 +260,8 @@ class EntitySet(object):
         info_file = os.path.join(folder, 'entity_info.json')
         with open(info_file, 'w') as handle:
             json.dump(enttypes, handle)
+        files.append(info_file)
+        return files
 
     def load_entities(self, entities, file_getter):
         """Load underlying entities."""
