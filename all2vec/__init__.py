@@ -264,54 +264,51 @@ class EntitySet(object):
         return files
 
     def build_and_save(self, folder, verbose=False):
-	"""Build and save all entities, preserves memory by deleting 
-	each index after build/save.
-	"""
+        """Preserves memory by deleting index after build and save.""" 
+        if self._is_built:
+            return
 
-	if self._is_built:
-	    return
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        files = []
 
-	if not os.path.exists(folder):
-	    os.makedirs(folder)
-	files = []
-
-	for annoy_object in self._annoy_objects.values():
-	    logging.info("Starting build for entity {} - {}...".format(
-		annoy_object._entity_type_id,
-		annoy_object._entity_type,
-	    ))
-	    annoy_object.build(verbose)
-	    logging.info("Done build for entity {} - {}".format(
-		annoy_object._entity_type_id,
-		annoy_object._entity_type,
-	    ))
-	    annoy_filepath = os.path.join(folder, "{}.ann".format(
-		annoy_object._entity_type,
-	    ))
-	    annoy_object._ann_obj.save(annoy_filepath)
-	    files.append(annoy_filepath)
+        for annoy_object in self._annoy_objects.values():
+            logging.info("Starting build for entity {} - {}...".format(
+                annoy_object._entity_type_id,
+                annoy_object._entity_type,
+            ))
+            annoy_object.build(verbose)
+            logging.info("Done build for entity {} - {}".format(
+                annoy_object._entity_type_id,
+                annoy_object._entity_type,
+            ))
+            annoy_filepath = os.path.join(folder, "{}.ann".format(
+                annoy_object._entity_type,
+            ))
+            annoy_object._ann_obj.save(annoy_filepath)
+            files.append(annoy_filepath)
             logging.info("Done saving for entity {} - {}".format(
                 annoy_object._entity_type_id,
                 annoy_object._entity_type,
             ))
 
             #Release memory
-	    del annoy_object._ann_obj
+            del annoy_object._ann_obj
 
-	self._is_built = True
+        self._is_built = True
 
-	pickle_filepath = os.path.join(folder, 'object.pickle')
-	with open(pickle_filepath, 'wb') as handle:
-	    dill.dump(self, handle)
-	files.append(pickle_filepath)
+        pickle_filepath = os.path.join(folder, 'object.pickle')
+        with open(pickle_filepath, 'wb') as handle:
+            dill.dump(self, handle)
+        files.append(pickle_filepath)
 
-	enttypes = self.get_entity_types()
+        enttypes = self.get_entity_types()
 
-	info_file = os.path.join(folder, 'entity_info.json')
-	with open(info_file, 'w') as handle:
-	    json.dump(enttypes, handle)
-	files.append(info_file)
-	return files
+        info_file = os.path.join(folder, 'entity_info.json')
+        with open(info_file, 'w') as handle:
+            json.dump(enttypes, handle)
+        files.append(info_file)
+        return files
 
     def load_entities(self, entities, file_getter):
         """Load underlying entities."""
