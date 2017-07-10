@@ -264,7 +264,7 @@ class EntitySet(object):
         return files
 
     def build_and_save(self, folder, verbose=False):
-        """Preserves memory by deleting index after build and save.""" 
+        """Preserve memory by deleting index after build and save."""
         if self._is_built:
             return
 
@@ -292,7 +292,7 @@ class EntitySet(object):
                 annoy_object._entity_type,
             ))
 
-            #Release memory
+            # Release memory
             del annoy_object._ann_obj
 
         self._is_built = True
